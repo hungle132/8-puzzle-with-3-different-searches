@@ -1,0 +1,1477 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <cmath>
+#include <ctime>
+#include <algorithm>
+#include <map>
+#include <utility>
+#include <string>
+#include <time.h>
+#include <iomanip>
+
+
+using namespace std;
+
+
+//I will be using a class node that holds the current board of the node that will either be the initial state or children states that hold boards
+//corresponding to the available movement that it can make
+class nodes{
+    
+public:
+
+    vector<int>board;
+    nodes* parent;
+    //gn is the cost of the path from the initial sate
+    int gn;
+
+    //hn will be the estimated disnace from wherever node n is to the goal node
+    int heuristic;
+
+    //fn will be the estimated cost of the cheapest solution the node will have to go through to get to the goal state
+    int fn;
+    int val;
+    int moves;
+    
+    //we have out default constructor here for the node
+    nodes(){
+        val = 0;
+        gn = 0;
+        heuristic = 0;
+        fn = 0;
+        moves = 0;
+        parent = NULL;
+     
+    }
+    //wew will make a node that holds the information of the board and the val at which the node is at
+    nodes(int info, vector<int>boar){
+        val = info;
+        board = boar;
+        parent = NULL;
+    }
+   
+    //these functions are for the board to decide whether or not they can move in a certain direction and will be used to create the child nodes
+    nodes* upfree(nodes* input);
+    nodes* downfree(nodes* input);
+    nodes* rightfree(nodes* input);
+    nodes* leftfree(nodes* input);
+    //int blanklocation(vector<nodes*> puzzle);
+
+ 
+};
+//make problem nodes que and vector to check states
+
+
+//find the location of the blank tile in the puzzle
+//when we find the location of the tile, we return an int of where it is in the vector
+int blanklocatio(vector<nodes*> puzzle){
+    int location;
+    for(int i = 0; i < puzzle.size(); i++){
+        if (puzzle.at(i)->val == 0)
+            location = i;
+    }
+    return location;
+}
+
+
+//this is essentially the name function as the one on the top but is used for int vectors
+    int blanklocation(vector<int> puzzl){
+    int location;
+    for(int i = 0; i < puzzl.size(); i++){
+        if (puzzl.at(i) == 0)
+            location = i;
+    }
+    return location;
+    }
+
+
+//another helper function to find the location, this function was primarily used for unit testing earlier stuff
+nodes* finder(vector<nodes*> l){
+    nodes* found;
+    for(int i = 0; i < l.size(); i++){
+        if (l.at(i)->val == 0)
+            found = l.at(i);
+    }
+    return found;
+}
+
+
+// need to make a node with the value
+// we make objects and store them into a vector.
+//this essentially makes the object vector from the given inputs of the user
+vector<nodes*>makeobjects(vector<int>&vec){
+    vector<nodes*>nodevec;
+        for(int i = 0; i < vec.size(); i++){
+        nodes* make = new nodes(vec.at(i), vec);
+        nodevec.push_back(make);
+    }
+    return nodevec;
+}
+
+
+ //we are doing a simple loop here with an empty vector while pushing
+ //back values to make out gooal state. Out goal state for a 3x3 should look like
+
+ // 1 2 3
+ // 4 5 6
+ // 7 8 0
+
+ vector<int> makefinalstate(vector<int> &input){
+    int num = 1;
+    for (int i = 0; i < input.size(); i++){
+        input.at(i) = num;
+        num++;
+    }
+    input.at(input.size()-1) = 0;
+
+    // input.push_back(1);
+    // input.push_back(2);
+    // input.push_back(3);
+    // input.push_back(4);
+    // input.push_back(5);
+    // input.push_back(6);
+    // input.push_back(7);
+    // input.push_back(8);
+    // input.push_back(0);
+
+    return input;
+}
+
+//this function is used to check where the current board we have is our goal board
+//if it is then we return true and if it isnt then we return false
+bool checkanswer(vector<int> first, vector<int> second){
+    for ( int i = 0; i < second.size(); i++){
+        if (first.at(i) != second.at(i)){
+            return false;
+        }
+    }
+    return true;
+}
+
+
+//updated for objects
+//here we are outputting the board of the vector
+void outputvector(vector<int> in){
+    
+   
+
+    for ( int i = 0; i < in.size(); i++){
+        if (i % 3 == 0){
+            cout << endl;
+        }
+        
+        cout << in.at(i) << " ";
+    }
+
+    cout << endl;
+}
+
+
+//Change for format of the problem
+//this function is the same as the one above but takes in a vector of the objects instead
+void outobjvector(vector<nodes*>a){
+    for (int i = 0; i < a.size(); i++){
+   //     cout << "a" << endl;
+    if(i% 3 == 0){
+        cout << endl;
+    }
+        cout << a.at(i)->val << " ";
+     //   cout << "b" << endl;
+    }
+    cout << endl;
+}
+
+
+//this function is used to output the nodes value
+//main function of this function was to check if we put the vectors properly
+void outobj(vector<nodes*>a){
+    for (int i = 0; i < a.size(); i++){
+   //     cout << "a" << endl;
+    
+        cout << a.at(i)->val << " ";
+     //   cout << "b" << endl;
+    }
+    cout << endl;
+}
+
+
+void outboard(nodes* a){
+    for (int i = 0; i < a->board.size(); i++){
+   if(i% 3 == 0){
+        cout << endl;
+    }
+        cout << a->board.at(i) << " ";
+     //   cout << "b" << endl;
+    }
+    cout << endl;
+}
+
+//we use this to check the vectors of the two objects
+//was used for testing purposes
+int spot = 0;
+bool checkcomp(nodes* first,vector<int> second){
+    if (first->val != second.at(spot)){
+        return false;
+    }
+    return true;
+}
+
+
+//this is used to make a que from the vector of the objects
+queue <nodes*>equal(vector<nodes*>b){
+    queue<nodes*> q;
+    for (int i = 0; i < b.size(); i++){
+        q.push(b.at(i));
+    }
+    return q;
+}
+
+
+//this function is used to create a left node child if a left move is available at all
+//it will check the current tile and see if it can move, if not it will not create the child
+//hard coded for 3x3 puzzles
+nodes* leftmove(nodes* &node,  int r, int c){
+    nodes* l = new nodes(node->val, node->board);
+    int tile = blanklocation(node->board);
+    if (tile == 0 || tile ==  3 || tile == 6){
+        cout << "wrong left" << endl;
+        return NULL;
+    }
+    else{
+    swap(l->board.at(tile),l->board.at(tile-1));
+    l->parent = node;
+    l->gn = node->gn + 1;
+    }
+    return l;
+}
+
+
+//this function is used to create a right node child if a right move is available at all
+//it will check the current tile and see if it can move, if not it will not create the child
+//hard coded for 3x3 puzzles
+nodes* rightmove(nodes* &node,  int r, int c){
+    nodes* ri = new nodes(node->val, node->board);
+    int tile = blanklocation(node->board);
+    if (tile == 2 || tile ==  5 || tile == 8){
+        cout << "wrong right" << endl;
+        return NULL;
+    }
+    else{
+    swap(ri->board.at(tile),ri->board.at(tile+1));
+    ri->parent = node;
+    ri->gn = node->gn + 1;
+    }
+    return ri;
+}
+
+
+
+//this function is used to create a up node child if a up move is available at all
+//it will check the current tile and see if it can move, if not it will not create the child
+//hard coded for 3x3 puzzles
+nodes* upmove(nodes* &node,  int r, int c){
+    nodes* u = new nodes(node->val, node->board);
+    int tile = blanklocation(node->board);
+    if (tile == 0 || tile ==  1 || tile == 2){
+        cout << "wrong up" << endl;
+        return NULL;
+    }
+    else{
+    swap(u->board.at(tile),u->board.at(tile- c));
+    u->parent = node;
+    u->gn = node->gn + 1;
+    }
+    return u;
+}
+
+
+
+//this function is used to create a down node child if a down move is available at all
+//it will check the current tile and see if it can move, if not it will not create the child
+//hard coded for 3x3 puzzles
+nodes* downmove(nodes* &node,  int r, int c){
+    nodes* d = new nodes(node->val, node->board);
+    int tile = blanklocation(node->board);
+    if (tile == 6 || tile ==  7 || tile == 8){
+        cout << "wrong down" << endl;
+        return NULL;
+    }
+    else{
+    swap(d->board.at(tile),d->board.at(tile + c));
+    d->parent = node;
+    d->gn = node->gn + 1;
+    }
+    return d;
+}
+
+
+//this function is used to check for repeated states in the board, I also used this to modify the parent, heuristic, and hn accordingly
+//if the state is a repeat of the state then we will not push back to the states or nodeque.
+//if it isnt, then we push back the state to know we have visited it already and the nodeque, we then return the pair of the nodeque and vector of states
+pair<queue<nodes*>,vector<nodes*> > sameboards(nodes* &current,queue<nodes*>nodeq, vector<nodes*>states,bool check,nodes* &h){
+    if ( current != NULL ){
+       // cout << "we are here rn" << endl;
+        current->parent = h;
+        current->heuristic = 0;
+        current->fn = h->gn;
+        for(int i = 0; i < states.size(); i++){
+            if (current->board == states.at(i)->board){
+                check = true;
+            }
+        }
+        if (check != true){
+           // cout << "huh" << endl;
+            states.push_back(current);
+            nodeq.push(current);
+           // cout << "nodeque size in function = ";
+            cout << nodeq.size() << endl;
+        }
+        else{
+            return make_pair(nodeq,states);
+        }
+    }
+    return make_pair(nodeq,states);
+}
+
+
+//testing if the nodes visited are working properly
+void outputvisit(vector<nodes*> &vi){
+    for(int i = 0 ; i < vi.size(); i ++){
+        outputvector(vi.at(i)->board);
+        cout << endl;
+        cout << "======================================" << endl;
+    }
+}
+
+
+//checking if the que's values are in proper order
+void checkque(queue<nodes*>w){
+    while(!w.empty()){
+       for (int i = 0 ; i  < 9; i++){
+         if(i% 3 == 0){
+        cout << endl;
+        }
+        cout << w.front()->board.at(i) << " ";
+     //   cout << "b" << endl;
+    }
+    cout << endl;
+        w.pop();
+    }
+}
+
+
+//a function to check for the gn values of the que
+//mainly used for checking if the gn values are right at all
+void gncheck(queue<nodes*> b){
+    while (!b.empty()){
+        cout << b.front()->gn << " ";
+        b.pop();
+    }
+}
+
+
+//this function is used to find the cheapest heuristic value in which we compare the fn with each node in the nodeque
+//first I put the nodes in a temp vector for an easier sort and then sorted the values with a nested loop, at the end
+//we will get a vector with sorted f(n) values and then push them back onto a nodeque. commented out stuff in the function
+//was used for testing purposes
+queue<nodes*> findheuristic(queue<nodes*>nodequ){
+    if(nodequ.size() == 1){
+        return nodequ;
+    }
+    queue<nodes*> first = nodequ;
+    vector<nodes*> temp;
+    queue<nodes*>re;
+
+    
+   //first we will make a vector to copy the nodes from the que over
+    while(!first.empty()){
+        temp.push_back(first.front());
+        first.pop();
+    }
+    //have two temp values to check with each other
+    //we also have a temp object to hold the object that we want to swap
+    int fr;
+    int sec;
+    nodes* swa;
+    for (int i = 0; i < temp.size(); i++){
+            fr = temp.at(i)->fn;
+            for (int k = i; k < temp.size(); k++){
+                sec = temp.at(k)->fn;
+                if(sec < fr){
+                    swa = temp.at(i);
+                    temp.at(i) = temp.at(k);
+                    temp.at(k) = swa;
+                }
+            }
+    }
+
+    
+    //queue<nodes*> second;
+
+    // for(int m = 0; m < temp.size(); m++){
+    //     cout << temp.at(m)->gn << " ";
+    // }
+
+
+
+    for(int l = 0; l < temp.size(); l++){
+        re.push(temp.at(l));
+    }
+    cout << endl;
+    // checkque(re);
+
+
+    return re;
+}
+
+
+//tested for node at depth 12, anything deeper than 15 will cause the problem to keep running until it runs out of memory and then seg faults.
+//make a value for the frontier node which is nodes in the nodes que
+void uniform_cost_search(nodes* head, vector<int> &sol, vector<nodes*> &visit, queue<nodes*> &nq, vector<nodes*> &cor,int &ex){
+    
+    //we want to test if the nodeque is empty because if it is, the board we have been given has no solution at all
+    if (nq.empty()){
+         // if we get here then the board has no valid solution to the problem.
+        cout << "invalid solution" << endl;
+        return;
+    }
+
+    //then we have our rows and columns that I harded to 3x3 for the board
+    int row, column;
+    row = 3; 
+    column = 3;
+
+    //testing to see the current head's hn value 
+      cout << "current fn value = " << head->fn << endl;
+    cout << "current hn value = " << head->heuristic << endl;
+    cout << "current gn value = " << head->gn << endl;
+
+    // cout << "front value ";
+    // cout << nq.front()->val << endl;
+
+    // if (head->parent == NULL){
+    //     outputvector(head->board);
+    // }
+    //cout << "here" << endl;
+   
+    //output heads current board that we are looking at
+    outboard(head);
+
+    
+    //we pop the front of the que and test if the current head's board is
+    //the goal state board and if they are equal
+    nq.pop();
+
+    //cout << nq.front()->val << endl;
+    //outputvector(head->board);
+
+    cout << "----------------------" << endl;
+
+    //here we do the check with the head and see if the current board is equal to the goal board
+    //if it is then we have found the node and return, if not then we continue with expanding the node
+    if (checkanswer(head->board,sol) == true){
+        cor.push_back(head);
+        cout << "answer" << endl;
+        return;
+    }
+    else if (checkanswer(head->board,sol) == false){
+        cout << "no" << endl;
+    }
+
+
+    //node choices for the state at which the blank is in
+    //basically this is the node expansion from w/e node we are on and then we check the cost
+
+    nodes* l = leftmove(head,row,column);
+
+    nodes* r = rightmove(head,row,column);
+
+    nodes* u = upmove(head,row,column);
+
+    nodes* d = downmove(head,row,column);
+
+    //expansion value of the nodes we have expanded
+    ex = ex + 1;
+
+
+   // outputvector(u->board);
+   // outputvector(d->board);
+    // cout << " here" << endl;
+    // cout << u << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "left gn " << endl;
+    // cout << l->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "r gn " << endl;
+    // cout << r->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "u gn " << endl;
+    // cout << u->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "d gn " << endl;
+    // //cout << d->gn << endl;
+
+    //here we set some variables for our functions to work
+    //the bool will be set to false for all of them
+    bool same = false;
+    pair<queue<nodes*>,vector<nodes*> > stuff;
+    //cout << "visited boards size = " << visit.size() << endl; 
+
+    //we check for any repeated states at this point of the code
+    if(l != NULL){
+    stuff = sameboards(l,nq,visit,same,head);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+
+    //nodeq first visit second
+    // 
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+
+    // if(r == NULL){
+    //     cout << "null rn" << endl;
+    // }
+
+    if(r != NULL){
+    stuff = sameboards(r,nq,visit,same,head);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+
+    if(u != NULL){
+    stuff = sameboards(u,nq,visit,same,head);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+
+    if(d != NULL){
+    stuff = sameboards(d,nq,visit,same,head);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+   // cout << "OUTPUTTING THE VISITED BOARDS THAT WE HAVE SEEN" << endl;
+
+    // queue<nodes*>same = nq;
+    // queue<nodes*>sc = nq;
+
+
+
+
+    //functions and outputs to check for certain stuff on the board
+    // cout << "que check " << endl;
+    // checkque(same);
+
+    // cout << "visit check " << endl;
+    // outputvisit(visit);
+
+    // gncheck(sc);
+
+    //do node cost check here
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    //cout << nq.size() << endl;
+
+    //a temp que to hold the que of the new node que and then we set the nq variable in the pass by reference to it
+    queue<nodes*> tem;
+    tem = findheuristic(nq);
+    nq = tem;
+    //nq.push(u);   
+    //cout << u->val;
+    //outputvector(u->board);
+    
+    //cout << "here" << endl;
+    
+
+    // cout << nq.size() << endl;
+
+    // cout << "front value ";
+    // cout << nq.front()->val << endl;
+    //cout << "here" << endl;
+    //cout << "here" << endl;
+    // if (l != NULL){
+    //     l->parent = head;
+    //     for (int i = 0 ; i < visit.size() ; i++){
+    //         if ()
+    //     }
+    // }
+    // cout << "checking for nodequesize is right" << endl;
+    // cout << nq.size() << endl;
+
+
+    //we will recursively call the function with the new values that we have obtained and continue until our goal state is found and we break out of the loop
+    uniform_cost_search(nq.front(),sol,visit,nq,cor,ex);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//this function will be used to find the misplaced tile of the node and the value will bed used to 
+//we will run the function and compare the states of the two boards to see which tiles are not in place and how many steps it will take to get them into the right spot
+    int misplacedspot(nodes* cur,vector<int>so){
+        int spot = 0;
+        int i = 0; 
+        while (i < so.size()){
+            if (cur->board.at(i) == so.at(i) ){
+                i++;
+            }
+            else{
+                spot = spot + 1;
+                i++;
+            }
+        }   
+        
+        //account for the blank space that we counted for earlier
+        if (spot != 0){
+        spot = spot - 1;
+        }
+        return spot;
+}   
+
+
+
+
+
+//making the searching of the nodes
+//this is essentially the same as the uniformed cost search with a* except now we will have a heuristic value and the fn will be equal to the gn + hn
+pair<queue<nodes*>,vector<nodes*> > sameboards_misplaced(nodes* &current,queue<nodes*>nodeq, vector<nodes*>states,bool check,nodes* &h,int& hval){
+    if ( current != NULL ){
+       // cout << "we are here rn" << endl;
+        current->parent = h;
+        current->heuristic = hval;
+        current->fn = h->gn + current->heuristic;
+        for(int i = 0; i < states.size(); i++){
+            if (current->board == states.at(i)->board){
+                check = true;
+            }
+        }
+        if (check != true){
+           // cout << "huh" << endl;
+            states.push_back(current);
+            nodeq.push(current);
+           // cout << "nodeque size in function = ";
+            cout << nodeq.size() << endl;
+        }
+        else{
+            return make_pair(nodeq,states);
+        }
+    }
+    return make_pair(nodeq,states);
+}
+
+
+//this function is the same as the uniformed cost search with a* except im using it for misplaced tile heuristic
+queue<nodes*> findheuristic_misplaced(queue<nodes*>nodequ){
+    if(nodequ.size() == 1){
+        return nodequ;
+    }
+    queue<nodes*> first = nodequ;
+    vector<nodes*> temp;
+    queue<nodes*>re;
+
+    
+   
+    while(!first.empty()){
+        temp.push_back(first.front());
+        first.pop();
+    }
+    int fr;
+    int sec;
+    nodes* swa;
+    for (int i = 0; i < temp.size(); i++){
+            fr = temp.at(i)->fn;
+            for (int k = i; k < temp.size(); k++){
+                sec = temp.at(k)->fn;
+                if(sec < fr){
+                    swa = temp.at(i);
+                    temp.at(i) = temp.at(k);
+                    temp.at(k) = swa;
+                }
+            }
+    }
+
+    
+    //queue<nodes*> second;
+
+    // for(int m = 0; m < temp.size(); m++){
+    //     cout << temp.at(m)->fn << " ";
+    // }
+
+
+
+    for(int l = 0; l < temp.size(); l++){
+        re.push(temp.at(l));
+    }
+    cout << endl;
+    // checkque(re);
+
+
+    return re;
+}
+
+void misplaced_tile_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &visit, queue<nodes*> &nq, vector<nodes*> &cor,int &ex){
+    
+
+    if (nq.empty()){
+        // if we get here then the board has no valid solution to the problem.
+        cout << "invalid solution" << endl;
+        return;
+    }
+    int row, column;
+    row = 3; 
+    column = 3;
+
+    //here Im checking for the fn value too to see if it is getting set properly
+    cout << "current fn value = " << head->fn << endl;
+    cout << "current hn value = " << head->heuristic << endl;
+    cout << "current gn value = " << head->gn << endl;
+    // cout << "front value ";
+    // cout << nq.front()->val << endl;
+
+    // if (head->parent == NULL){
+    //     outputvector(head->board);
+    // }
+    //cout << "here" << endl;
+    
+    //output heads current board that we are looking at
+    outboard(head);
+    
+
+    nq.pop();
+    //cout << nq.front()->val << endl;
+    //outputvector(head->board);
+
+    cout << "----------------------" << endl;
+
+
+    if (checkanswer(head->board,sol) == true){
+        cor.push_back(head);
+        cout << "answer" << endl;
+        return;
+    }
+    else if (checkanswer(head->board,sol) == false){
+        cout << "no" << endl;
+    }
+
+
+    //node choices for the state at which the blank is in
+    //basically this is the node expansion from w/e node we are on and then we check the cost
+
+    nodes* l = leftmove(head,row,column);
+
+    nodes* r = rightmove(head,row,column);
+
+    nodes* u = upmove(head,row,column);
+
+    nodes* d = downmove(head,row,column);
+
+    ex = ex + 1;
+   // outputvector(u->board);
+   // outputvector(d->board);
+    // cout << " here" << endl;
+    // cout << u << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "left gn " << endl;
+    // cout << l->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "r gn " << endl;
+    // cout << r->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "u gn " << endl;
+    // cout << u->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "d gn " << endl;
+    // //cout << d->gn << endl;
+
+
+    bool same = false;
+    pair<queue<nodes*>,vector<nodes*> > stuff;
+    //cout << "visited boards size = " << visit.size() << endl; 
+    //we check for any repeated states at this point of the code
+
+    //here is where this part differs from a* search as we will get the misplaced spot heuristic and use to to calculate out fn when we make out child nodes
+    if(l != NULL){
+    int val1 = misplacedspot(l,sol);
+    cout << "l val "<< val1 << endl;
+    stuff = sameboards_misplaced(l,nq,visit,same,head,val1);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+   //nodeq first visit second
+    // 
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+
+    // if(r == NULL){
+    //     cout << "null rn" << endl;
+    // }
+    if(r != NULL){
+    int val2 = misplacedspot(r,sol);
+    cout << "r val "<< val2 << endl;
+    stuff = sameboards_misplaced(r,nq,visit,same,head,val2);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+    if(u != NULL){
+    int val3 = misplacedspot(u,sol);
+    cout << "u val "<< val3 << endl;
+    stuff = sameboards_misplaced(u,nq,visit,same,head,val3);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+    if(d != NULL){
+    int val4 = misplacedspot(d,sol);
+    cout << "d val "<< val4 << endl;
+    stuff = sameboards_misplaced(d,nq,visit,same,head,val4);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+   // cout << "OUTPUTTING THE VISITED BOARDS THAT WE HAVE SEEN" << endl;
+
+    // queue<nodes*>same = nq;
+    // queue<nodes*>sc = nq;
+
+
+
+
+    //functions and outputs to check for certain stuff on the board
+    // cout << "que check " << endl;
+    // checkque(same);
+
+    // cout << "visit check " << endl;
+    // outputvisit(visit);
+
+    // gncheck(sc);
+
+    //do node cost check here
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    //cout << nq.size() << endl;
+    queue<nodes*> tem;
+    tem = findheuristic_misplaced(nq);
+    nq = tem;
+    //nq.push(u);   
+    //cout << u->val;
+    //outputvector(u->board);
+    
+    //cout << "here" << endl;
+    
+
+    // cout << nq.size() << endl;
+
+    // cout << "front value ";
+    // cout << nq.front()->val << endl;
+    //cout << "here" << endl;
+    //cout << "here" << endl;
+    // if (l != NULL){
+    //     l->parent = head;
+    //     for (int i = 0 ; i < visit.size() ; i++){
+    //         if ()
+    //     }
+    // }
+    // cout << "checking for nodequesize is right" << endl;
+    // cout << nq.size() << endl;
+
+
+
+    misplaced_tile_heuristic(nq.front(),sol,visit,nq,cor,ex);
+}
+
+
+
+//anything with manhattan is not finished
+//essentially this function would have been used to calcualte the manhattan heurstic and would use the value around the same spot as our misplaced one
+int manhatspot(nodes* cur,vector<int>so){
+    int loc = 0;
+    int i = 0;
+
+}
+
+
+pair<queue<nodes*>,vector<nodes*> > sameboards_manhattan_distance(nodes* &current,queue<nodes*>nodeq, vector<nodes*>states,bool check,nodes* &h,int& hval){
+    if ( current != NULL ){
+       // cout << "we are here rn" << endl;
+        current->parent = h;
+        current->heuristic = hval;
+        current->fn = h->gn + current->heuristic;
+        for(int i = 0; i < states.size(); i++){
+            if (current->board == states.at(i)->board){
+                check = true;
+            }
+        }
+        if (check != true){
+           // cout << "huh" << endl;
+            states.push_back(current);
+            nodeq.push(current);
+           // cout << "nodeque size in function = ";
+            cout << nodeq.size() << endl;
+        }
+        else{
+            return make_pair(nodeq,states);
+        }
+    }
+    return make_pair(nodeq,states);
+}
+
+
+queue<nodes*> findheuristic_manhattan_distance(queue<nodes*>nodequ){
+    if(nodequ.size() == 1){
+        return nodequ;
+    }
+    queue<nodes*> first = nodequ;
+    vector<nodes*> temp;
+    queue<nodes*>re;
+
+    
+   
+    while(!first.empty()){
+        temp.push_back(first.front());
+        first.pop();
+    }
+    int fr;
+    int sec;
+    nodes* swa;
+    for (int i = 0; i < temp.size(); i++){
+            fr = temp.at(i)->fn;
+            for (int k = i; k < temp.size(); k++){
+                sec = temp.at(k)->fn;
+                if(sec < fr){
+                    swa = temp.at(i);
+                    temp.at(i) = temp.at(k);
+                    temp.at(k) = swa;
+                }
+            }
+    }
+
+    
+    //queue<nodes*> second;
+
+    // for(int m = 0; m < temp.size(); m++){
+    //     cout << temp.at(m)->fn << " ";
+    // }
+
+
+
+    for(int l = 0; l < temp.size(); l++){
+        re.push(temp.at(l));
+    }
+    cout << endl;
+    // checkque(re);
+
+
+    return re;
+}
+
+void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &visit, queue<nodes*> &nq, vector<nodes*> &cor,int &ex){
+    
+
+    if (nq.empty()){
+        // if we get here then the board has no valid solution to the problem.
+        cout << "invalid solution" << endl;
+        return;
+    }
+    int row, column;
+    row = 3; 
+    column = 3;
+    cout << "current fn value = " << head->fn << endl;
+    cout << "current hn value = " << head->heuristic << endl;
+    // cout << "front value ";
+    // cout << nq.front()->val << endl;
+
+    // if (head->parent == NULL){
+    //     outputvector(head->board);
+    // }
+    //cout << "here" << endl;
+    
+    
+    
+
+    nq.pop();
+    //cout << nq.front()->val << endl;
+    //outputvector(head->board);
+
+    cout << "----------------------" << endl;
+
+
+    if (checkanswer(head->board,sol) == true){
+        cor.push_back(head);
+        cout << "answer" << endl;
+        return;
+    }
+    else if (checkanswer(head->board,sol) == false){
+        cout << "no" << endl;
+    }
+
+
+    //node choices for the state at which the blank is in
+    //basically this is the node expansion from w/e node we are on and then we check the cost
+
+    nodes* l = leftmove(head,row,column);
+
+    nodes* r = rightmove(head,row,column);
+
+    nodes* u = upmove(head,row,column);
+
+    nodes* d = downmove(head,row,column);
+
+    ex = ex + 1;
+   // outputvector(u->board);
+   // outputvector(d->board);
+    // cout << " here" << endl;
+    // cout << u << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "left gn " << endl;
+    // cout << l->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "r gn " << endl;
+    // cout << r->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "u gn " << endl;
+    // cout << u->gn << endl;
+
+    // cout << "----------------------------------" << endl;
+    // cout << "d gn " << endl;
+    // //cout << d->gn << endl;
+
+
+    bool same = false;
+    pair<queue<nodes*>,vector<nodes*> > stuff;
+    //cout << "visited boards size = " << visit.size() << endl; 
+    //we check for any repeated states at this point of the code
+    if(l != NULL){
+    int val1 = manhatspot(l,sol);
+    cout << "l val "<< val1 << endl;
+    stuff = sameboards_manhattan_distance(l,nq,visit,same,head,val1);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+   //nodeq first visit second
+    // 
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+
+    // if(r == NULL){
+    //     cout << "null rn" << endl;
+    // }
+    if(r != NULL){
+    int val2 = manhatspot(r,sol);
+    cout << "r val "<< val2 << endl;
+    stuff = sameboards_manhattan_distance(r,nq,visit,same,head,val2);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+    if(u != NULL){
+    int val3 = manhatspot(u,sol);
+    cout << "u val "<< val3 << endl;
+    stuff = sameboards_manhattan_distance(u,nq,visit,same,head,val3);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+
+    if(d != NULL){
+    int val4 = manhatspot(d,sol);
+    cout << "d val "<< val4 << endl;
+    stuff = sameboards_manhattan_distance(d,nq,visit,same,head,val4);
+    nq = stuff.first;
+    visit = stuff.second;
+    }
+    // cout << "visited boards size = " << visit.size() << endl; 
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    // cout << "==================================================" << endl;
+   // cout << "OUTPUTTING THE VISITED BOARDS THAT WE HAVE SEEN" << endl;
+
+    // queue<nodes*>same = nq;
+    // queue<nodes*>sc = nq;
+
+
+
+
+    //functions and outputs to check for certain stuff on the board
+    // cout << "que check " << endl;
+    // checkque(same);
+
+    // cout << "visit check " << endl;
+    // outputvisit(visit);
+
+    // gncheck(sc);
+
+    //do node cost check here
+    // cout << "nodeque size = ";
+    // cout << nq.size() << endl;
+    //cout << nq.size() << endl;
+    queue<nodes*> tem;
+    tem = findheuristic_manhattan_distance(nq);
+    nq = tem;
+    //nq.push(u);   
+    //cout << u->val;
+    //outputvector(u->board);
+    
+    //cout << "here" << endl;
+    
+
+    // cout << nq.size() << endl;
+
+    // cout << "front value ";
+    // cout << nq.front()->val << endl;
+    //cout << "here" << endl;
+    //cout << "here" << endl;
+    // if (l != NULL){
+    //     l->parent = head;
+    //     for (int i = 0 ; i < visit.size() ; i++){
+    //         if ()
+    //     }
+    // }
+    // cout << "checking for nodequesize is right" << endl;
+    // cout << nq.size() << endl;
+
+
+
+   manhattan_distance_heuristic(nq.front(),sol,visit,nq,cor,ex);
+}
+
+
+
+
+//here is where we set our variables of the user and vectors and que
+//the current code will only accept a 3x3 board
+int main()
+{
+    //setting the variables that I will be used for the board
+    int input, input1,input2,input3,input4,input5,input6,input7,input8,input9;
+    vector<int> inputs;
+    vector<int> goal;
+    vector<nodes*>test;
+    vector<nodes*>visited;
+    queue<nodes*>nodequeue;
+    vector<nodes*>correct;
+    nodes* header;
+    nodes* func;
+    int size = 0;
+    int expand = 0;
+    int column = 3;
+    int row = 3;
+    int loc = 0;
+    int depth = 0;
+    
+   // cout << visited.size() << endl;
+
+    //grabbing the user input and placing them into a vector
+    cout << "8 Puzzle Solver. Enter 1 to use default puzzle or 2 for custom puzzle" << endl;
+
+    cin >> input; 
+
+    if (input == 1){
+        input1 = 1;
+        input2 = 2;
+        input3 = 3;
+        input4 = 5;
+        input5 = 0;
+        input6 = 6;
+        input7 = 4;
+        input8 = 7;
+        input9 = 8;
+
+    inputs.push_back(input1);
+    inputs.push_back(input2);
+    inputs.push_back(input3);
+    inputs.push_back(input4);
+    inputs.push_back(input5);
+    inputs.push_back(input6);
+    inputs.push_back(input7);
+    inputs.push_back(input8);
+    inputs.push_back(input9);
+
+    //here i will get the size of the vector of inputs and resize a vector accordinly to the amount of inputs
+    size = inputs.size();
+    goal.resize(size);
+    //cout << goal.size();
+    //make a vector of the goal state
+    goal = makefinalstate(goal);
+
+    //make a vector of the object vals
+    test = makeobjects(inputs);
+   // cout << test.size() << endl;
+   //grabbibg the location of the blank to test
+    loc = blanklocatio(test);
+    cout << loc << endl;
+    //header = finder(test);
+
+    //out blank location inside the vector
+    int bla = blanklocation(inputs);
+    //we will have a header point to the blank to we out first thing to check
+    header = test.at(bla);
+   // header = test.front();
+    cout << "-------------------" << endl;
+    cout << "header first val " << header->val << endl;
+    
+    outobjvector(test);
+    cout << endl;
+    nodequeue.push(header);
+    // cout << "node que front" << nodequeue.front()->val << endl;
+    // cout << "------------------------" << endl;
+    outputvector(goal);
+
+    //cout << "node que back" << nodequeue.back()->val << endl;
+    visited.push_back(header);
+
+    //just a test to see if our boards were true, used mostly to test earlier stuff
+    if( checkanswer(header->board, goal) == true){
+        cout << "yes" << endl;
+    }
+    else{
+        cout << "no" << endl;
+     }   
+    }
+
+    else{
+
+    //here is where the code allows for the user to input custom inputs as a board
+    //only works for 3x3 boards atm and will function the same way as a default board would in terms
+    //of setting the variables
+    cout << "Enter the puzzle with 3 values then hit enter, 0 will represent the blank state" << endl;
+
+    cout << "Enter the first row: " << endl;
+    cin >> input1 >> input2 >> input3 ;
+    inputs.push_back(input1);
+    inputs.push_back(input2);
+    inputs.push_back(input3);
+
+
+    cout << "Enter the second row: " << endl;
+
+    cin >> input4 >> input5 >> input6 ;
+    inputs.push_back(input4);
+    inputs.push_back(input5);
+    inputs.push_back(input6);
+
+
+    cout << "Enter the third row: " << endl;
+    
+    cin >> input7 >> input8 >> input9 ; 
+    inputs.push_back(input7);
+    inputs.push_back(input8);
+    inputs.push_back(input9);
+
+    size = inputs.size();
+    goal.resize(size);
+    cout << "goal size = " << goal.size();
+    goal = makefinalstate(goal);
+    test = makeobjects(inputs);
+   // cout << test.size() << endl;
+    loc = blanklocatio(test);
+    cout << loc << endl;
+    //header = finder(test);
+
+    int bla = blanklocation(inputs);
+    header = test.at(bla);
+   // header = test.front();
+    cout << "-------------------" << endl;
+    cout << "header first val " << header->val << endl;
+    
+    outobjvector(test);
+    cout << endl;
+    nodequeue.push(header);
+    // cout << "node que front" << nodequeue.front()->val << endl;
+    // cout << "------------------------" << endl;
+    outputvector(goal);
+
+    //cout << "node que back" << nodequeue.back()->val << endl;
+    visited.push_back(header);
+
+    if( checkanswer(header->board, goal) == true){
+        cout << "yes" << endl;
+    }
+    else{
+        cout << "no" << endl;
+    }
+    }    
+   
+
+
+
+    cout << "---------------------------------" << endl;
+    // outputvector(inputs);
+    // outputvector(goal);
+
+
+//testing vectors if they are equal
+//this test was the initial test to see if the function was working properly with no bugs
+    if (checkanswer(inputs,goal) == false){
+        cout << "no" << endl;
+        
+    }
+    else{
+        cout << "ok" << endl;
+    }
+
+
+    //now we prompt the user of what algorithm they want to see for the board
+    cout << "input 1  for Uniform Cost Search, input for  Misplaced Tile Heuristic, input 3 for Manhattan Distance Heuristic" << endl;
+    cin >> input;
+
+    //if input was one then we use uniformed cost search on the board
+    if (input == 1){
+       
+      // cout << "-------------------------" << endl;
+    //    if (checksol(header)){
+    //     cout << "bleh" << endl;
+    //    }
+    //    else{
+    //     cout << "meh" << endl;
+    //    }
+
+        //here we set clock for the board and after the function is done performing the algorithm, we will then
+        //get the depth of the solution which should be the gn of the solution board
+        //we will get the expanded nodes from the int expand that we set earlier and is passed by reference to the function
+        //then we get the fontier of the nodes which is w/e the nodeque size is + 1 as we took out one node from is earlier
+        //we will then have out second clock time and calucate how long it took to perform the entire operation
+        cout << endl << endl;
+        clock_t beg = clock();
+        uniform_cost_search(header,goal,visited,nodequeue,correct,expand);
+        
+        cout << "uniform" << endl;
+        if(correct.size() != 0){
+        cout << correct.size() << endl;
+        depth = correct.front()->gn;
+        cout << "depth of the solution is " << depth << endl;
+        }
+        else{
+            cout << "no solution available" << endl;
+        }
+        cout << "Expanded nodes: " << expand << endl;
+        cout << "frontier nodes max was " << nodequeue.size()+1 << " but now currently holds " << nodequeue.size() << " nodes"<< endl;
+        clock_t en = clock();
+        double t = double(en-beg)/CLOCKS_PER_SEC;
+        
+        cout << "time in secs for this function was " << setprecision(20) << t << endl;
+        
+    }
+
+
+
+    else if (input == 2){
+
+        //here we set clock for the board and after the function is done performing the algorithm, we will then
+        //get the depth of the solution which should be the gn of the solution board
+        //we will get the expanded nodes from the int expand that we set earlier and is passed by reference to the function
+        //then we get the fontier of the nodes which is w/e the nodeque size is + 1 as we took out one node from is earlier
+        //we will then have out second clock time and calucate how long it took to perform the entire operation
+        cout << endl << endl;
+        clock_t beg = clock();
+        misplaced_tile_heuristic(header,goal,visited,nodequeue,correct,expand);
+        
+        cout << "misplaced" << endl;
+        if(correct.size() != 0){
+        cout << correct.size() << endl;
+        depth = correct.front()->gn;
+         cout << "depth of the solution is " << depth << endl;
+        }
+        else{
+            cout << "no solution available" << endl;
+        }
+        cout << "Expanded nodes: " << expand << endl;
+        cout << "frontier nodes max was " << nodequeue.size()+1 << " but now currently holds " << nodequeue.size() << " nodes"<< endl;
+        clock_t en = clock();
+        double t = double(en-beg)/CLOCKS_PER_SEC;
+        
+        cout << "time in secs for this function was " << setprecision(20) << t << endl;
+    }
+
+
+
+    else if  (input == 3){
+        
+        //this is setup for manhattan distance but will just perform nothing as it was not implemented
+        //essentially it would have shown the same thing the first two algorithms showed except with the manhattan distance
+        cout << endl << endl;
+        clock_t beg = clock();
+        manhattan_distance_heuristic(header,goal,visited,nodequeue,correct,expand);
+        clock_t en = clock();
+        cout << "manhattan" << endl;
+        if(correct.size() != 0){
+        cout << correct.size() << endl;
+        depth = correct.front()->gn;
+         cout << "depth of the solution is " << depth << endl;
+        }
+        else{
+            cout << "no solution available" << endl;
+        }
+        cout << "Expanded nodes: " << expand << endl;
+        cout << "frontier nodes max was " << nodequeue.size()+1 << " but now currently holds " << nodequeue.size() << " nodes"<< endl;
+        double t = double(en-beg)/CLOCKS_PER_SEC;
+        
+        cout << "time in secs for this function was " << setprecision(20) << t << endl;
+    }
+    
+
+  
+    return 0;
+}
