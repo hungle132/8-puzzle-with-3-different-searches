@@ -1368,14 +1368,14 @@ int main()
 
     if (input == 1){
         input1 = 1;
-        input2 = 3;
-        input3 = 6;
+        input2 = 6;
+        input3 = 7;
         input4 = 5;
         input5 = 0;
-        input6 = 2;
+        input6 = 3;
         input7 = 4;
-        input8 = 7;
-        input9 = 8;
+        input8 = 8;
+        input9 = 2;
 
     inputs.push_back(input1);
     inputs.push_back(input2);
