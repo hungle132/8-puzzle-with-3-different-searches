@@ -931,8 +931,10 @@ void misplaced_tile_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &vis
 
 
 
-//anything with manhattan is not finished
-//essentially this function would have been used to calcualte the manhattan heurstic and would use the value around the same spot as our misplaced one
+
+//essentially this function is used to calcualte the manhattan heurstic and would use the value around the same spot as our misplaced one
+//we would find the tile at which the board is not at the correct spot, then we would find the tile that it is supposed to be at
+//after we find the incorrect spot and correct spot, we will find the row and column each of them are and find the total = | r1 - r2 | + | c1 - c2 |
 int manhatspot(nodes* cur,vector<int>so){
     
     int total = 0;
@@ -1172,10 +1174,10 @@ void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> 
     outboard(head);
     
 
-    int b = manhatspot(head,sol);
+    //int b = manhatspot(head,sol);
 
 
-    cout << "================================" << endl;
+    //cout << "================================" << endl;
     nq.pop();
     //cout << nq.front()->val << endl;
     //outputvector(head->board);
@@ -1587,8 +1589,11 @@ int main()
 
     else if  (input == 3){
         
-        //this is setup for manhattan distance but will just perform nothing as it was not implemented
-        //essentially it would have shown the same thing the first two algorithms showed except with the manhattan distance
+        //here we set clock for the board and after the function is done performing the algorithm, we will then
+        //get the depth of the solution which should be the gn of the solution board
+        //we will get the expanded nodes from the int expand that we set earlier and is passed by reference to the function
+        //then we get the fontier of the nodes which is w/e the nodeque size is + 1 as we took out one node from is earlier
+        //we will then have out second clock time and calucate how long it took to perform the entire operation
         cout << endl << endl;
         clock_t beg = clock();
         manhattan_distance_heuristic(header,goal,visited,nodequeue,correct,expand);
