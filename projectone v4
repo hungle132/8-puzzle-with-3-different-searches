@@ -1462,12 +1462,12 @@ int main()
 
     size = inputs.size();
     goal.resize(size);
-    cout << "goal size = " << goal.size();
+    //cout << "goal size = " << goal.size();
     goal = makefinalstate(goal);
     test = makeobjects(inputs);
    // cout << test.size() << endl;
     loc = blanklocatio(test);
-    cout << loc << endl;
+    //cout << loc << endl;
     //header = finder(test);
 
     int bla = blanklocation(inputs);
