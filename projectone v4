@@ -934,8 +934,45 @@ void misplaced_tile_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &vis
 //anything with manhattan is not finished
 //essentially this function would have been used to calcualte the manhattan heurstic and would use the value around the same spot as our misplaced one
 int manhatspot(nodes* cur,vector<int>so){
-    int loc = 0;
+    
+    int total = 0;
     int i = 0;
+
+    while (i < so.size()){
+        if(cur->board.at(i) == so.at(i)){
+            i++;
+        }
+        else{
+
+            
+            int spot = i; //misplaced spot on the board
+
+            int v = cur->board.at(spot); //the misplaced value
+
+            if (v == 0){
+                i++;
+            }
+            else{
+            cout << "v val " << v << endl;
+            cout << "spot val " << spot << endl;
+
+            int correctspot = 0;
+
+            for (int b = 0; b < so.size(); b++){
+                if(v != so.at(b)){
+                    correctspot++;
+                }
+                else if (v == so.at(b)){
+                    break;
+                }
+            }
+            cout << "correctspot = " << correctspot << endl;
+
+           i++;
+            }
+        }
+        
+    }
 
 }
 
@@ -1027,6 +1064,7 @@ void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> 
     column = 3;
     cout << "current fn value = " << head->fn << endl;
     cout << "current hn value = " << head->heuristic << endl;
+    cout << "current gn value = " << head->gn << endl;
     // cout << "front value ";
     // cout << nq.front()->val << endl;
 
@@ -1035,9 +1073,14 @@ void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> 
     // }
     //cout << "here" << endl;
     
-    
+    //output heads current board that we are looking at
+    outboard(head);
     
 
+    int b = manhatspot(head,sol);
+
+
+    cout << "================================" << endl;
     nq.pop();
     //cout << nq.front()->val << endl;
     //outputvector(head->board);
@@ -1095,7 +1138,7 @@ void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> 
     //we check for any repeated states at this point of the code
     if(l != NULL){
     int val1 = manhatspot(l,sol);
-    cout << "l val "<< val1 << endl;
+    //cout << "l val "<< val1 << endl;
     stuff = sameboards_manhattan_distance(l,nq,visit,same,head,val1);
     nq = stuff.first;
     visit = stuff.second;
@@ -1113,7 +1156,7 @@ void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> 
     // }
     if(r != NULL){
     int val2 = manhatspot(r,sol);
-    cout << "r val "<< val2 << endl;
+   // cout << "r val "<< val2 << endl;
     stuff = sameboards_manhattan_distance(r,nq,visit,same,head,val2);
     nq = stuff.first;
     visit = stuff.second;
@@ -1125,7 +1168,7 @@ void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> 
 
     if(u != NULL){
     int val3 = manhatspot(u,sol);
-    cout << "u val "<< val3 << endl;
+  //  cout << "u val "<< val3 << endl;
     stuff = sameboards_manhattan_distance(u,nq,visit,same,head,val3);
     nq = stuff.first;
     visit = stuff.second;
@@ -1137,7 +1180,7 @@ void manhattan_distance_heuristic(nodes* head, vector<int> &sol, vector<nodes*> 
 
     if(d != NULL){
     int val4 = manhatspot(d,sol);
-    cout << "d val "<< val4 << endl;
+   // cout << "d val "<< val4 << endl;
     stuff = sameboards_manhattan_distance(d,nq,visit,same,head,val4);
     nq = stuff.first;
     visit = stuff.second;
@@ -1232,10 +1275,10 @@ int main()
         input1 = 1;
         input2 = 2;
         input3 = 3;
-        input4 = 5;
-        input5 = 0;
+        input4 = 4;
+        input5 = 5;
         input6 = 6;
-        input7 = 4;
+        input7 = 0;
         input8 = 7;
         input9 = 8;
 
