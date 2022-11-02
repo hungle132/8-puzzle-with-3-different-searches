@@ -234,7 +234,7 @@ nodes* leftmove(nodes* &node,  int r, int c){
     nodes* l = new nodes(node->val, node->board);
     int tile = blanklocation(node->board);
     if (tile == 0 || tile ==  3 || tile == 6){
-        cout << "wrong left" << endl;
+        //cout << "wrong left" << endl;
         return NULL;
     }
     else{
@@ -253,7 +253,7 @@ nodes* rightmove(nodes* &node,  int r, int c){
     nodes* ri = new nodes(node->val, node->board);
     int tile = blanklocation(node->board);
     if (tile == 2 || tile ==  5 || tile == 8){
-        cout << "wrong right" << endl;
+        //cout << "wrong right" << endl;
         return NULL;
     }
     else{
@@ -273,7 +273,7 @@ nodes* upmove(nodes* &node,  int r, int c){
     nodes* u = new nodes(node->val, node->board);
     int tile = blanklocation(node->board);
     if (tile == 0 || tile ==  1 || tile == 2){
-        cout << "wrong up" << endl;
+        //cout << "wrong up" << endl;
         return NULL;
     }
     else{
@@ -293,7 +293,7 @@ nodes* downmove(nodes* &node,  int r, int c){
     nodes* d = new nodes(node->val, node->board);
     int tile = blanklocation(node->board);
     if (tile == 6 || tile ==  7 || tile == 8){
-        cout << "wrong down" << endl;
+        //cout << "wrong down" << endl;
         return NULL;
     }
     else{
@@ -324,7 +324,7 @@ pair<queue<nodes*>,vector<nodes*> > sameboards(nodes* &current,queue<nodes*>node
             states.push_back(current);
             nodeq.push(current);
            // cout << "nodeque size in function = ";
-            cout << nodeq.size() << endl;
+            //cout << nodeq.size() << endl;
         }
         else{
             return make_pair(nodeq,states);
@@ -681,7 +681,7 @@ pair<queue<nodes*>,vector<nodes*> > sameboards_misplaced(nodes* &current,queue<n
             states.push_back(current);
             nodeq.push(current);
            // cout << "nodeque size in function = ";
-            cout << nodeq.size() << endl;
+            //cout << nodeq.size() << endl;
         }
         else{
             return make_pair(nodeq,states);
@@ -827,7 +827,7 @@ void misplaced_tile_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &vis
     //here is where this part differs from a* search as we will get the misplaced spot heuristic and use to to calculate out fn when we make out child nodes
     if(l != NULL){
     int val1 = misplacedspot(l,sol);
-    cout << "l val "<< val1 << endl;
+    //cout << "l val "<< val1 << endl;
     stuff = sameboards_misplaced(l,nq,visit,same,head,val1);
     nq = stuff.first;
     visit = stuff.second;
@@ -845,7 +845,7 @@ void misplaced_tile_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &vis
     // }
     if(r != NULL){
     int val2 = misplacedspot(r,sol);
-    cout << "r val "<< val2 << endl;
+    //cout << "r val "<< val2 << endl;
     stuff = sameboards_misplaced(r,nq,visit,same,head,val2);
     nq = stuff.first;
     visit = stuff.second;
@@ -857,7 +857,7 @@ void misplaced_tile_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &vis
 
     if(u != NULL){
     int val3 = misplacedspot(u,sol);
-    cout << "u val "<< val3 << endl;
+    //cout << "u val "<< val3 << endl;
     stuff = sameboards_misplaced(u,nq,visit,same,head,val3);
     nq = stuff.first;
     visit = stuff.second;
@@ -869,7 +869,7 @@ void misplaced_tile_heuristic(nodes* head, vector<int> &sol, vector<nodes*> &vis
 
     if(d != NULL){
     int val4 = misplacedspot(d,sol);
-    cout << "d val "<< val4 << endl;
+   // cout << "d val "<< val4 << endl;
     stuff = sameboards_misplaced(d,nq,visit,same,head,val4);
     nq = stuff.first;
     visit = stuff.second;
@@ -993,7 +993,7 @@ pair<queue<nodes*>,vector<nodes*> > sameboards_manhattan_distance(nodes* &curren
             states.push_back(current);
             nodeq.push(current);
            // cout << "nodeque size in function = ";
-            cout << nodeq.size() << endl;
+           // cout << nodeq.size() << endl;
         }
         else{
             return make_pair(nodeq,states);
